@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Unsplash wallpapers for the cleanyourtv launcher: four photos a day by time of day, each with its place and
+     photographer, written into the launcher's wallpapers/ folder through its ThemeProvider. No activity, no tile. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Granted over ADB by setup (pm grant): the launcher's ThemeProvider only accepts writers holding it. -->
+    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
+
+    <!-- No leanback declaration: the app has no screen and no Home tile, and is installed over ADB only. -->
+    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+
+    <queries>
+        <provider android:authorities="com.gathin.tvhome.theme" />
+    </queries>
+
+    <application
+        android:label="TV Unsplash wallpapers"
+        android:allowBackup="false"
+        android:usesCleartextTraffic="false">
+
+        <service
+            android:name=".WallJob"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <!-- Setup from a computer only: the sender needs DUMP, which the ADB shell has and apps do not.
+             am broadcast -n app.tvunsplash/.Setup -a app.tvunsplash.SETUP -\-es key <access key> -->
+        <receiver
+            android:name=".Setup"
+            android:exported="true"
+            android:permission="android.permission.DUMP">
+            <intent-filter>
+                <action android:name="app.tvunsplash.SETUP" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name=".Boot"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>
