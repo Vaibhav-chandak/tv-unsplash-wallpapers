@@ -59,6 +59,13 @@ Setup installs the app, grants it `WRITE_SECURE_SETTINGS` (the launcher's theme 
 holders of it), exempts it from app standby so its checks keep running, sends it your key and fetches the first
 photo. Check it with `adb logcat -d -s UnsplashWall:*`.
 
+## Your name in the greeting
+
+The launcher can put a name after its greeting: `"greeting_name": "The Sharma family"` in `theme/config.json`
+shows GOOD EVENING, THE SHARMA FAMILY above the clock. The starter look leaves it empty (the greeting alone);
+put your own name in before you run setup, or later in your theme. It is a standard cleanyourtv key, not part of
+this app.
+
 ## Options
 
 Sent over ADB, as setup does:

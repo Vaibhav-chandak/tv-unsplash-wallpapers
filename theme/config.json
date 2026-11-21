@@ -14,5 +14,6 @@
     "clock_wallpaper":  true,
     "clock_wallpaper_dim":  25,
     "icon_only_buttons":  true,
-    "icon_only_inputs":  true
+    "icon_only_inputs":  true,
+    "greeting_name":  ""
 }
