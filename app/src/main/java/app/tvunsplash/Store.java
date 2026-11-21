@@ -26,6 +26,30 @@ final class Store {
     static boolean credit(Context c) { return prefs(c).getBoolean("credit", true); }
     static void setCredit(Context c, boolean on) { prefs(c).edit().putBoolean("credit", on).apply(); }
 
+    /** Photos a day, 1 to 48 (Slots); 4 follows the light. */
+    static int perDay(Context c) { return Slots.perDay(prefs(c).getInt("per_day", Slots.DEFAULT_PER_DAY)); }
+    static void setPerDay(Context c, int n) { prefs(c).edit().putInt("per_day", Slots.perDay(n)).apply(); }
+
+    /** The owner's searches, taken in turn ("architecture,street,wildlife"); empty uses the built-in time-of-day ones. */
+    static List<String> topics(Context c) { return split(prefs(c).getString("topics", ""), ","); }
+    static void setTopics(Context c, String topics) { prefs(c).edit().putString("topics", topics.trim()).apply(); }
+
+    /** Unsplash collection ids, comma-separated; when set they replace the searches. */
+    static String collections(Context c) { return prefs(c).getString("collections", ""); }
+    static void setCollections(Context c, String ids) {
+        prefs(c).edit().putString("collections", ids.replaceAll("[^0-9A-Za-z_,-]", "")).apply();
+    }
+
+    /** Only photos with a place name; off prefers them but takes one without when none of the ten has one. */
+    static boolean placeOnly(Context c) { return prefs(c).getBoolean("place_only", false); }
+    static void setPlaceOnly(Context c, boolean on) { prefs(c).edit().putBoolean("place_only", on).apply(); }
+
+    private static List<String> split(String s, String separator) {
+        List<String> out = new ArrayList<>();
+        for (String part : s.split(separator)) if (!part.trim().isEmpty()) out.add(part.trim());
+        return out;
+    }
+
     static String slot(Context c) { return prefs(c).getString("slot", ""); }
     static void forceNext(Context c) { prefs(c).edit().putString("slot", "").apply(); }
 

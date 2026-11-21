@@ -37,34 +37,9 @@ final class Fetcher {
 
     enum Result { UNCHANGED, NO_KEY, UPDATED, FAILED }
 
-    /** Time-of-day slots: name, first hour, searches it rotates through. Night runs past midnight. */
-    private static final String[][] MORNING = {{"sunrise mountains"}, {"misty morning landscape"}, {"sunrise lake"},
-            {"morning valley"}, {"sunrise beach"}, {"morning forest light"}};
-    private static final String[][] DAY = {{"mountain lake"}, {"alpine landscape"}, {"coastline aerial"},
-            {"national park landscape"}, {"waterfall landscape"}, {"desert landscape"}, {"himalaya"}};
-    private static final String[][] EVENING = {{"sunset mountains"}, {"golden hour landscape"}, {"sunset coast"},
-            {"dusk lake"}, {"sunset desert"}};
-    private static final String[][] NIGHT = {{"milky way landscape"}, {"night city skyline"}, {"aurora borealis"},
-            {"starry night mountains"}, {"city lights night"}};
-
     private final Context context;
 
     Fetcher(Context context) { this.context = context; }
-
-    /** The slot now as "yyyy-mm-dd#name"; night after midnight belongs to the previous evening's date. */
-    static String slotId(LocalDateTime now) {
-        int h = now.getHour();
-        if (h >= 5 && h < 11) return now.toLocalDate() + "#morning";
-        if (h >= 11 && h < 16) return now.toLocalDate() + "#day";
-        if (h >= 16 && h < 19) return now.toLocalDate() + "#evening";
-        return (h < 5 ? now.toLocalDate().minusDays(1) : now.toLocalDate()) + "#night";
-    }
-
-    private static String query(String slot, int dayOfYear) {
-        String[][] list = slot.endsWith("#morning") ? MORNING : slot.endsWith("#day") ? DAY
-                : slot.endsWith("#evening") ? EVENING : NIGHT;
-        return list[dayOfYear % list.length][0];
-    }
 
     /** The periodic and the one-off check can start together; one at a time, the second sees the slot done. */
     private static final Object LOCK = new Object();
@@ -77,16 +52,20 @@ final class Fetcher {
 
     private Result runLocked() throws Exception {
         LocalDateTime now = LocalDateTime.now();
-        String slot = slotId(now);
+        int perDay = Store.perDay(context);
+        String slot = Slots.id(now, perDay);
         if (slot.equals(Store.slot(context))) return Result.UNCHANGED;
         String key = Store.key(context);
         if (key.isEmpty()) return Result.NO_KEY;
 
-        String q = query(slot, now.getDayOfYear());
-        String api = "https://api.unsplash.com/photos/random?count=10&orientation=landscape&content_filter=high&query="
-                + URLEncoder.encode(q, "UTF-8");
+        // Collections pick the photos themselves; Unsplash takes either collections or a search, not both.
+        String collections = Store.collections(context);
+        String q = collections.isEmpty() ? Slots.query(now, perDay, Store.topics(context)) : "collections " + collections;
+        String api = "https://api.unsplash.com/photos/random?count=10&orientation=landscape&content_filter=high"
+                + (collections.isEmpty() ? "&query=" + URLEncoder.encode(q, "UTF-8")
+                        : "&collections=" + URLEncoder.encode(collections, "UTF-8"));
         JSONArray photos = new JSONArray(getText(api, key));
-        JSONObject photo = choose(photos, Store.recent(context));
+        JSONObject photo = choose(photos, Store.recent(context), Store.placeOnly(context));
         if (photo == null) return Result.FAILED;
 
         String id = photo.getString("id").replaceAll("[^A-Za-z0-9_-]", "");
@@ -122,8 +101,11 @@ final class Fetcher {
         return Result.UPDATED;
     }
 
-    /** A photo not shown recently, preferring one with a place name. */
-    private static JSONObject choose(JSONArray photos, List<String> recent) {
+    /**
+     * A photo not shown recently, preferring one with a place name; placeOnly takes only those (and keeps the
+     * current photo until the next check when none of the ten has one).
+     */
+    private static JSONObject choose(JSONArray photos, List<String> recent, boolean placeOnly) {
         JSONObject fallback = null;
         for (int i = 0; i < photos.length(); i++) {
             JSONObject p = photos.optJSONObject(i);
@@ -132,7 +114,7 @@ final class Fetcher {
             if (!place(p).isEmpty()) return p;
             if (fallback == null) fallback = p;
         }
-        return fallback;
+        return placeOnly ? null : fallback;
     }
 
     private static String place(JSONObject p) {

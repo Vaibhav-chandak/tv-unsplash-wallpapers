@@ -1,11 +1,14 @@
 # TV Unsplash wallpapers
 
-A fresh landscape photo on your Android TV's Home screen four times a day, matched to the time of day, with
-the place and the photographer under the buttons. Made for the [cleanyourtv](https://github.com/Gathin23/cleanyourtv)
-launcher (`com.gathin.tvhome`): it writes each photo into the launcher's wallpaper folder and deletes the one
-before. No app tile, nothing on screen of its own.
+A fresh Unsplash photo on your Android TV's Home screen, with the place and the photographer under the buttons.
+Out of the box: four landscapes a day matched to the light. You choose how often it changes (1 to 48 times a
+day) and what it shows (your own topics, or Unsplash collections). Made for the
+[cleanyourtv](https://github.com/Gathin23/cleanyourtv) launcher (`com.gathin.tvhome`): it writes each photo into
+the launcher's wallpaper folder and deletes the one before. No app tile, nothing on screen of its own.
 
 <img src="screenshot.jpg" width="640" alt="A night skyline as the Home wallpaper, with its place and photographer under the buttons">
+
+The default, 4 a day with no topics set:
 
 | Time | Photos |
 |---|---|
@@ -14,6 +17,34 @@ before. No app tile, nothing on screen of its own.
 | 16:00 - 19:00 | sunset, golden hour |
 | 19:00 - 05:00 | night sky, the Milky Way, city lights |
 
+## Choose what and how often
+
+Pick these when you run setup, or change them any time later (`-SkipInstall` / `SKIP_INSTALL=1` only sends the
+options). Each change fetches a new photo straight away.
+
+| Option | Windows (`setup.ps1`) | Mac/Linux (`setup.sh`) | Default |
+|---|---|---|---|
+| Photos a day, 1 to 48 | `-PerDay 6` | `PER_DAY=6` | 4, following the light (above). Other numbers split the day evenly from midnight: 1 = once a day, 24 = every hour |
+| Your own topics, taken in turn | `-Topics 'india landscape,temples,himalaya'` | `TOPICS='architecture,street,wildlife'` | none: the nature searches above, by time of day. `'none'` goes back to them |
+| Unsplash collections instead of topics | `-Collections '1234567,7654321'` | `COLLECTIONS='1234567'` | none. The number is in the collection's link on unsplash.com. `'none'` turns them off |
+| Only photos with a place name | `-PlaceOnly` | `PLACE_ONLY=1` | preferred, not required (some topics rarely have places) |
+| Leave "/ Unsplash" out of the caption | `-NoCredit` | `NO_CREDIT=1` | credit shown |
+
+Examples:
+
+```bash
+# Every two hours, Indian scenery
+PER_DAY=12 TOPICS='india landscape,kerala backwaters,rajasthan,himalaya' ./setup.sh 192.168.1.50 <key>
+# Later: once a day, architecture only
+PER_DAY=1 TOPICS='architecture' SKIP_INSTALL=1 ./setup.sh 192.168.1.50
+```
+
+```powershell
+powershell -ExecutionPolicy Bypass -File setup.ps1 -TvHost 192.168.1.50 -SkipInstall -PerDay 2 -Topics 'ocean,beach'
+```
+
+Photos are always landscape (wide), safe-search high, at most one new photo per slot.
+
 ## How it behaves
 
 - Every 30 minutes, only while the TV is online, it checks whether a new time slot has started. If so it asks
@@ -21,7 +52,8 @@ before. No app tile, nothing on screen of its own.
   downloads it at 1920x1080 in sRGB (about 0.5 MB), writes it and its caption into the launcher's folder, then
   deletes the previous photo. Nothing is deleted until the new photo is fully written.
 - Offline, or when Unsplash is down, the current photo simply stays.
-- About 8 Unsplash API calls a day (one search, one download count per photo), far below the free limit.
+- Two Unsplash API calls per photo (one search, one download count): 8 a day by default, 96 at 48 a day, all
+  well inside the free limit of 50 an hour.
 - It runs for a few seconds per check (about 8 MB of memory), then Android ends it. Nothing runs between checks.
 
 ## Requirements
@@ -66,14 +98,17 @@ shows GOOD EVENING, THE SHARMA FAMILY above the clock. The starter look leaves i
 put your own name in before you run setup, or later in your theme. It is a standard cleanyourtv key, not part of
 this app.
 
-## Options
+## Sending options by hand
 
-Sent over ADB, as setup does:
+Setup sends one broadcast; you can send it yourself too (text values in single quotes inside the double quotes):
 
 ```bash
-adb shell am broadcast -n app.tvunsplash/.Setup -a app.tvunsplash.SETUP --ez force true    # a new photo now
-adb shell am broadcast -n app.tvunsplash/.Setup -a app.tvunsplash.SETUP --ez credit false  # caption without "/ Unsplash"
+adb shell "am broadcast -n app.tvunsplash/.Setup -a app.tvunsplash.SETUP --ez force true"   # a new photo now
+adb shell "am broadcast -n app.tvunsplash/.Setup -a app.tvunsplash.SETUP --ei per_day 6 --es topics 'ocean,desert'"
 ```
+
+Extras: `--es key`, `--ei per_day 1..48`, `--es topics 'a,b'` (`'none'` clears), `--es collections 'id,id'`
+(`'none'` clears), `--ez place_only true|false`, `--ez credit true|false`, `--ez force true`.
 
 The caption credits the photographer and Unsplash by default, as Unsplash's API guidelines ask of apps that show
 their photos. If you turn the Unsplash credit off, that is your call under their terms.
