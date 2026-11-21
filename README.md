@@ -28,10 +28,13 @@ before. No app tile, nothing on screen of its own.
 
 - An Android TV (Android 8 or later) with the **cleanyourtv launcher** as Home.
 - A launcher build with the **`wallpaper_watch`** key, so a swapped photo shows without restarting Home.
-  It is proposed upstream (see the issue linked from this project); until it is in a release, a new photo
-  shows the next time Home starts.
-- Optional, and recommended: **`wallpaper_scrim`**, which darkens each photo behind the text only as much as that
-  photo needs. The starter look in `theme/` turns both on.
+  It is proposed upstream in [cleanyourtv discussion #4319](https://github.com/Gathin23/cleanyourtv/discussions/4319);
+  until it is in a release, a new photo shows the next time Home starts.
+- Optional, and recommended: **`wallpaper_scrim`** ([PR #4318](https://github.com/Gathin23/cleanyourtv/pull/4318)),
+  which darkens each photo behind the text only as much as that photo needs. The starter look in `theme/` turns
+  both on.
+- Unsplash photos often carry an Adobe RGB colour profile, which made Home stutter on some TVs; the helper asks
+  Unsplash for sRGB, and the launcher fix is [PR #4317](https://github.com/Gathin23/cleanyourtv/pull/4317).
 - A free Unsplash **access key**: sign in at <https://unsplash.com/oauth/applications>, choose **New Application**,
   accept the guidelines and copy the **Access Key** (not the Secret key). Each person uses their own key.
 
