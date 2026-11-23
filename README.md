@@ -59,14 +59,19 @@ Photos are always landscape (wide), safe-search high, at most one new photo per 
 ## Requirements
 
 - An Android TV (Android 8 or later) with the **cleanyourtv launcher** as Home.
-- A launcher build with the **`wallpaper_watch`** key, so a swapped photo shows without restarting Home.
-  It is proposed upstream in [cleanyourtv discussion #4319](https://github.com/Gathin23/cleanyourtv/discussions/4319);
-  until it is in a release, a new photo shows the next time Home starts.
-- Optional, and recommended: **`wallpaper_scrim`** ([PR #4318](https://github.com/Gathin23/cleanyourtv/pull/4318)),
-  which darkens each photo behind the text only as much as that photo needs. The starter look in `theme/` turns
-  both on.
-- Unsplash photos often carry an Adobe RGB colour profile, which made Home stutter on some TVs; the helper asks
-  Unsplash for sRGB, and the launcher fix is [PR #4317](https://github.com/Gathin23/cleanyourtv/pull/4317).
+- Recommended: the launcher from the
+  [**`unsplash-wallpapers` branch**](https://github.com/Vaibhav-chandak/cleanyourtv/tree/unsplash-wallpapers) of my
+  cleanyourtv fork. It is current cleanyourtv plus two off-by-default keys that the starter look in `theme/` turns on:
+  - **`wallpaper_watch`**: a new photo shows within a minute, without restarting Home.
+  - **`wallpaper_scrim`**: darkens each photo behind the text only as much as that photo needs.
+
+  The keys stay in the fork because the core launcher keeps its size for fixes every owner needs
+  ([#4318](https://github.com/Gathin23/cleanyourtv/pull/4318)). Build and install it the usual way, from
+  `launcher/` on that branch. With the stock launcher instead, everything works, but a new photo shows only the
+  next time Home starts, and text over bright photos is not darkened.
+- Unsplash photos often carry an Adobe RGB colour profile, which made Home stutter on some TVs. The helper asks
+  Unsplash for sRGB, and the launcher now decodes every wallpaper into sRGB as well
+  ([#4317](https://github.com/Gathin23/cleanyourtv/pull/4317), merged).
 - A free Unsplash **access key**: sign in at <https://unsplash.com/oauth/applications>, choose **New Application**,
   accept the guidelines and copy the **Access Key** (not the Secret key). Each person uses their own key.
 
